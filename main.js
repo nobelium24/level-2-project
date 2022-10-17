@@ -1,3 +1,13 @@
+const openNav = () => {
+    document.getElementById("mySidebar").style.width = "150px";
+    document.getElementById("main").style.marginLeft = "150px";
+}
+
+function closeNav() {
+    document.getElementById("mySidebar").style.width = "0";
+    document.getElementById("main").style.marginLeft = "0";
+}
+
 const adminSignUp = () => {
     if (localStorage.adminDetails) {
         let found = []
@@ -218,43 +228,43 @@ const userSignIn = () => {
         } else {
             alert("Invalid LogIn details")
         }
-        
+
     }
 }
 
 const toCart = (i) => {
-    cartDetail=[]
+    cartDetail = []
     let userDetails = JSON.parse(localStorage.getItem("currentUser"))
     let products = localStorage.getItem("productDetails")
     let parsedProducts = JSON.parse(products)
-    newC=[parsedProducts[i],userDetails.email]
+    newC = [parsedProducts[i], userDetails.email]
     if (localStorage.Carts) {
-        let carts=JSON.parse(localStorage.getItem("Carts"))
+        let carts = JSON.parse(localStorage.getItem("Carts"))
         carts.push(newC)
         console.log(carts)
-        localStorage.setItem("Carts",JSON.stringify(carts))   
+        localStorage.setItem("Carts", JSON.stringify(carts))
     } else {
         cartDetail.push(newC)
-        localStorage.setItem("Carts",JSON.stringify(cartDetail))
+        localStorage.setItem("Carts", JSON.stringify(cartDetail))
     }
 }
 
-const viewCart = () =>{
+const viewCart = () => {
     let view = JSON.parse(localStorage.getItem("Carts"));
     let userDetails = JSON.parse(localStorage.getItem("currentUser"))
-  
+
     const see = (ope) => {
-        if(ope[1] == userDetails.email){
+        if (ope[1] == userDetails.email) {
             return ope
         }
-     }
-     let wole = view.map(see)
+    }
+    let wole = view.map(see)
     //  console.log(wole);
-     for (let i = 0; i < wole.length; i++) {
+    for (let i = 0; i < wole.length; i++) {
         const element = wole[i];
         // console.log(element);
         cartSection1.innerHTML += `
-        <div class="card w-25 mx-2 shadow-lg">
+        <div class="card mx-2 shadow-lg my-2 bg bg-dark text-light" style="width: 45%;">
             <img src='./images/${element[0].file}' style='height:200px;'/>
             <p class='mx-2'>Product Name: ${element[0].name}</p>       
             <p class='mx-2'>Product Description: ${element[0].desc}</p>
@@ -263,23 +273,89 @@ const viewCart = () =>{
             <button class="btn btn-danger" onClick="delCart(${i})">Delete</button>
         </div>
         `
-        
-     }
+    }
+    total()
+}
+
+const total = () => {
+    let view = JSON.parse(localStorage.getItem("Carts"));
+    let userDetails = JSON.parse(localStorage.getItem("currentUser"))
+    // console.log(userDetails);
+
+    const see = (ope) => {
+        if (ope[1] == userDetails.email) {
+            return ope
+        }
+    }
+    let wole = view.map(see)
+
+    let arr = []
+    for (let i = 0; i < wole.length; i++) {
+        const element = wole[i];
+        // console.log(wole);
+        arr.push(wole[i][0].price)
+        // console.log(element);
+        // arr.push(element[0].price)
+        // console.log(arr);
+    }
     
+    const sum = arr.reduce((accumulator, value) => {
+        return Number(accumulator) + Number(value);
+    }, 0);
+    totalVal.innerHTML += `Total Amount: ${sum}`
+    let cartDet ={fName:userDetails.firstName, lName:userDetails.lastName, email:userDetails.email, amount:sum}
+    localStorage.setItem("cartDetails", JSON.stringify(cartDet))
 }
 
 const delCart = (i) => {
-   console.log(i);
-   let card = localStorage.getItem("Carts")
-   let parsedcart = JSON.parse(card)
-   for (let j = 0; j < parsedcart.length; j++) {
-       if (j == i) {
-           parsedcart.splice(i, 1)
-           localStorage.setItem("Carts", JSON.stringify(parsedcart))
-       }
+    console.log(i);
+    let card = localStorage.getItem("Carts")
+    let parsedcart = JSON.parse(card)
+    for (let j = 0; j < parsedcart.length; j++) {
+        if (j == i) {
+            parsedcart.splice(i, 1)
+            localStorage.setItem("Carts", JSON.stringify(parsedcart))
+        }
 
-   }
-   window.location.reload()
+    }
+    window.location.reload()
 }
+
+const pay = () => {
+    let paye = JSON.parse(localStorage.getItem("cartDetails"))
+    emailAddress.value = paye.email
+    amount.value = paye.amount
+    firstName2.value = paye.fName
+    lastName2.value = paye.lName
+
+}
+
+let userDetails = JSON.parse(localStorage.getItem("currentUser"))
+const paymentForm = document.getElementById('paymentForm');
+paymentForm.addEventListener("submit", payWithPaystack, false);
+function payWithPaystack(e) {
+      
+    let paye = JSON.parse(localStorage.getItem("cartDetails"))
+
+  let handler = PaystackPop.setup({
+    key: 'pk_test_69cdd0e7b5d321f04bd3a73c423d3990ac69a5c4', 
+    email: paye.email,
+    amount: Number(paye.amount)* 100,
+    ref: ''+Math.floor((Math.random() * 1000000000) + 1),
+    onClose: function(){
+      alert('Window closed.');
+    },
+    callback: function(response){
+      if (response.message == 'Approved') {
+          let message = 'Payment complete! Reference: ' + response.reference;
+          alert(message);
+          localStorage.removeItem("cartDetails")
+      }
+    }
+  });
+
+  handler.openIframe();
+}
+
 
 
